@@ -12,10 +12,37 @@ const downloadLink = document.getElementById("downloadLink");
 const canvas = document.getElementById("studioCanvas");
 const ctx = canvas.getContext("2d");
 
-const FEEDS = [
-  "https://feeds.reuters.com/reuters/worldNews",
-  "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
-  "https://feeds.bbci.co.uk/news/world/rss.xml"
+const NEWS_SOURCES = [
+  {
+    name: "BBC World",
+    url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml",
+    parse: (data) => (data.items || []).map((item) => ({
+      title: item.title,
+      description: item.description || item.content || "",
+      link: item.link || "",
+      source: "BBC"
+    }))
+  },
+  {
+    name: "Reuters World",
+    url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.reuters.com/reuters/worldNews",
+    parse: (data) => (data.items || []).map((item) => ({
+      title: item.title,
+      description: item.description || item.content || "",
+      link: item.link || "",
+      source: "Reuters"
+    }))
+  },
+  {
+    name: "Spaceflight News",
+    url: "https://api.spaceflightnewsapi.net/v4/articles/?limit=8",
+    parse: (data) => (data.results || []).map((item) => ({
+      title: item.title,
+      description: item.summary || "",
+      link: item.url || "",
+      source: "Spaceflight News"
+    }))
+  }
 ];
 
 let stories = [];
@@ -23,7 +50,6 @@ let tickerIndex = 0;
 let voiceEnabled = true;
 let mediaRecorder;
 let recordedChunks = [];
-let drawLoopId;
 
 function summarize(text) {
   const cleaned = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
@@ -47,51 +73,80 @@ function summarize(text) {
     .join(" ");
 }
 
-async function fetchFeed(url) {
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-  const response = await fetch(proxyUrl);
-  const xml = await response.text();
-  const doc = new DOMParser().parseFromString(xml, "text/xml");
+async function fetchJSON(url, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
-  return [...doc.querySelectorAll("item")].slice(0, 5).map((item) => ({
-    title: item.querySelector("title")?.textContent?.trim() || "Untitled",
-    description: item.querySelector("description")?.textContent?.trim() || "",
-    link: item.querySelector("link")?.textContent?.trim() || ""
-  }));
+async function fetchSource(source) {
+  const payload = await fetchJSON(source.url);
+  return source.parse(payload).filter((story) => story?.title);
+}
+
+async function generateAISummary(story) {
+  const baseSummary = summarize(`${story.title}. ${story.description}`);
+  const prompt = [
+    "You are a CNN-style TV producer.",
+    "Return only one concise sentence under 35 words.",
+    `Headline: ${story.title}`,
+    `Context: ${story.description || baseSummary}`
+  ].join("\n");
+
+  try {
+    const aiUrl = `https://text.pollinations.ai/${encodeURIComponent(prompt)}`;
+    const response = await fetch(aiUrl);
+    if (!response.ok) throw new Error("AI endpoint failed");
+    const aiText = (await response.text()).replace(/\s+/g, " ").trim();
+    return aiText || baseSummary;
+  } catch (error) {
+    console.warn("AI summary fallback:", error);
+    return baseSummary;
+  }
 }
 
 async function refreshNews() {
-  statusEl.textContent = "Fetching latest headlines from free feeds…";
+  statusEl.textContent = "Fetching latest online reports...";
   try {
-    const all = await Promise.all(FEEDS.map((f) => fetchFeed(f)));
-    stories = all.flat().filter((s) => s.title).slice(0, 20);
-    if (!stories.length) throw new Error("No stories returned.");
+    const loaded = await Promise.allSettled(NEWS_SOURCES.map((source) => fetchSource(source)));
+    stories = loaded
+      .filter((entry) => entry.status === "fulfilled")
+      .flatMap((entry) => entry.value)
+      .slice(0, 20);
+
+    if (!stories.length) throw new Error("No stories returned from any source.");
 
     renderStories();
+    await updateTopStory(stories[0]);
     announceStory(stories[0]);
     statusEl.textContent = `Live: ${new Date().toLocaleTimeString()} · ${stories.length} stories loaded`;
   } catch (error) {
     console.error(error);
-    statusEl.textContent = "Feed fetch issue. Retrying automatically…";
+    statusEl.textContent = "Unable to reach live feeds right now. Retrying automatically...";
   }
 }
 
+async function updateTopStory(story) {
+  currentStoryEl.textContent = story.title;
+  summaryEl.textContent = "Generating AI anchor line...";
+  summaryEl.textContent = await generateAISummary(story);
+}
+
 function renderStories() {
-  const [top] = stories;
-  if (!top) return;
-
-  currentStoryEl.textContent = top.title;
-  summaryEl.textContent = summarize(`${top.title}. ${top.description}`);
-
   feedListEl.innerHTML = "";
   stories.slice(0, 10).forEach((story) => {
     const li = document.createElement("li");
     const link = document.createElement("a");
     link.href = story.link;
-    link.textContent = story.title;
+    link.textContent = story.source ? `[${story.source}] ${story.title}` : story.title;
     link.target = "_blank";
     link.rel = "noreferrer noopener";
-    link.style.color = "#9cd1ff";
     li.appendChild(link);
     feedListEl.appendChild(li);
   });
@@ -117,7 +172,7 @@ function speak(text) {
 }
 
 function announceStory(story) {
-  const narration = `This is Neko Airi with a live update. ${story.title}. ${summarize(story.description || story.title)}`;
+  const narration = `This is Neko Airi with a live update. ${story.title}. ${summaryEl.textContent}`;
   speak(narration);
 }
 
@@ -135,7 +190,7 @@ function drawStudioFrame() {
   ctx.fillStyle = "#050a20";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = "#ff2d6f";
+  ctx.fillStyle = "#cc0000";
   ctx.fillRect(0, 0, canvas.width, 68);
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 34px sans-serif";
@@ -158,7 +213,7 @@ function drawStudioFrame() {
   ctx.font = "bold 22px monospace";
   ctx.fillText(`Broadcast Time: ${now}`, 28, 523);
 
-  drawLoopId = requestAnimationFrame(drawStudioFrame);
+  requestAnimationFrame(drawStudioFrame);
 }
 
 function wrapText(text, x, y, maxWidth, lineHeight) {

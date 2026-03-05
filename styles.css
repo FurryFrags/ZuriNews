@@ -1,7 +1,7 @@
 :root {
-  --bg: #090d2a;
-  --panel: #101841;
-  --accent: #f62f77;
+  --bg: #06080f;
+  --panel: rgba(9, 16, 36, 0.92);
+  --accent: #cc0000;
   --text: #ecf3ff;
 }
 
@@ -10,7 +10,10 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: "Inter", "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top, #111b54, var(--bg));
+  background:
+    radial-gradient(circle at 10% 10%, rgba(200, 0, 0, 0.28), transparent 30%),
+    radial-gradient(circle at 90% 18%, rgba(0, 110, 255, 0.25), transparent 28%),
+    linear-gradient(145deg, #020304, #0a1023 58%, #06090f);
   color: var(--text);
 }
 
@@ -24,14 +27,14 @@ body {
   display: flex;
   gap: 1rem;
   align-items: center;
-  background: rgba(16, 24, 65, 0.92);
-  border: 1px solid #37408e;
+  background: var(--panel);
+  border: 1px solid #4b638f;
   border-radius: 14px;
   padding: 0.8rem 1rem;
 }
 .logo { font-size: 1.45rem; font-weight: 800; letter-spacing: 0.03em; }
 .logo span {
-  background: #ea1f4f;
+  background: var(--accent);
   color: white;
   font-size: 0.8rem;
   margin-left: 0.5rem;
@@ -59,29 +62,44 @@ body {
 .reporter-panel,
 .headlines-panel,
 .studio-tools {
-  background: rgba(16, 24, 65, 0.92);
-  border: 1px solid #37408e;
+  background: var(--panel);
+  border: 1px solid #4b638f;
   border-radius: 14px;
   padding: 1rem;
 }
 
 .reporter-frame {
   position: relative;
-  background: linear-gradient(160deg, #152062, #29144f);
   border-radius: 14px;
   height: 360px;
   display: grid;
-  place-items: center;
+  place-items: end center;
   overflow: hidden;
+  border: 1px solid #5a6d8f;
 }
-.cat-avatar {
-  width: 88%;
-  max-width: 320px;
+
+.cnn-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 28px),
+    linear-gradient(160deg, #63080f 0%, #1e2948 52%, #070b14 100%);
+  animation: drift 12s linear infinite;
+}
+
+.zuri-avatar {
+  position: relative;
+  width: min(92%, 340px);
+  object-fit: contain;
+  z-index: 2;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.55));
   transition: transform 0.2s ease;
 }
-.reporter-frame.talking .cat-avatar {
-  transform: translateY(-2px) scale(1.02);
+
+.reporter-frame.talking .zuri-avatar {
+  transform: translateY(-3px) scale(1.01);
 }
+
 .mic {
   position: absolute;
   width: 18px;
@@ -90,7 +108,9 @@ body {
   bottom: 6%;
   background: linear-gradient(to bottom, #a8b6d4, #6f7d9f);
   border-radius: 8px;
+  z-index: 3;
 }
+
 .on-air-badge {
   position: absolute;
   top: 10px;
@@ -100,6 +120,7 @@ body {
   font-weight: 800;
   padding: 0.35rem 0.55rem;
   border-radius: 6px;
+  z-index: 3;
 }
 
 .current-story {
@@ -118,6 +139,7 @@ body {
   overflow-y: auto;
 }
 .feed-list li { margin-bottom: 0.6rem; }
+.feed-list a { color: #9cd1ff; }
 
 .ticker-wrap {
   margin-top: 1rem;
@@ -162,6 +184,11 @@ body {
   border-radius: 10px;
   border: 1px solid #3d4bb2;
   background: #050a20;
+}
+
+@keyframes drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(35px); }
 }
 
 @media (max-width: 900px) {

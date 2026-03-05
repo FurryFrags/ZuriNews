@@ -4,11 +4,12 @@ A CNN-style, real-time browser news channel featuring **Neko Airi**, a cute AI c
 
 ## What it does
 
-- Pulls real-time headlines from free RSS sources (Reuters, NYTimes, BBC) via a free CORS proxy.
-- Builds an AI-style summary locally in the browser (no paid model APIs).
+- Pulls real-time headlines from online sources using keyless/free endpoints (RSS2JSON + Spaceflight News API).
+- Uses **Pollinations text API** (free, keyless) to generate a concise AI anchor line for each top story.
 - Continuously updates ticker + top story.
 - Broadcast narration with a **female voice preference** using Web Speech API.
 - Includes a free in-browser "video generation" tool that records the live canvas broadcast to WebM.
+- Displays the provided `Zuri.png` in a CNN-style reporter frame/background.
 
 ## Run
 
