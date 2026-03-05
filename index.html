@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZuriNews Live</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="channel-shell">
+    <header class="top-bar">
+      <div class="logo">ZuriNews <span>LIVE</span></div>
+      <div class="status" id="status">Booting newsroom…</div>
+      <button id="toggleVoice" class="voice-btn">Voice: On</button>
+    </header>
+
+    <main class="main-grid">
+      <section class="reporter-panel">
+        <div class="reporter-frame" id="reporterFrame">
+          <svg viewBox="0 0 320 320" class="cat-avatar" aria-label="Cat reporter avatar">
+            <defs>
+              <linearGradient id="furGrad" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stop-color="#f9d6ff"/>
+                <stop offset="100%" stop-color="#ffa8d4"/>
+              </linearGradient>
+            </defs>
+            <circle cx="160" cy="168" r="112" fill="url(#furGrad)"/>
+            <polygon points="90,92 130,28 154,102" fill="#f7b8df"/>
+            <polygon points="230,92 190,28 166,102" fill="#f7b8df"/>
+            <circle cx="124" cy="160" r="14" fill="#2f2645"/>
+            <circle cx="196" cy="160" r="14" fill="#2f2645"/>
+            <ellipse cx="160" cy="198" rx="20" ry="13" fill="#fff"/>
+            <path d="M148 216 Q160 230 172 216" stroke="#2f2645" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <circle cx="102" cy="194" r="12" fill="#ff9fcf" opacity="0.7"/>
+            <circle cx="218" cy="194" r="12" fill="#ff9fcf" opacity="0.7"/>
+            <rect x="90" y="246" width="140" height="58" rx="18" fill="#1a1f4e"/>
+            <rect x="146" y="246" width="28" height="58" fill="#bfcee6"/>
+          </svg>
+          <div class="mic"></div>
+          <div class="on-air-badge">ON AIR</div>
+        </div>
+        <div class="reporter-meta">
+          <h1>Neko Airi</h1>
+          <p>AI Feline Correspondent · Real-time global updates</p>
+        </div>
+      </section>
+
+      <section class="headlines-panel">
+        <h2>Breaking Feed</h2>
+        <article id="currentStory" class="current-story">Loading top story…</article>
+        <p id="summary" class="summary">Synthesizing summary…</p>
+        <ul id="feedList" class="feed-list"></ul>
+      </section>
+    </main>
+
+    <footer class="ticker-wrap">
+      <div class="ticker-label">LIVE TICKER</div>
+      <div id="ticker" class="ticker">Connecting to free global feeds…</div>
+    </footer>
+
+    <section class="studio-tools">
+      <h3>Free AI Studio Tools</h3>
+      <p>Generate a short channel clip (WebM) directly in your browser with no paid APIs.</p>
+      <div class="buttons">
+        <button id="startRec">Start Video Generation</button>
+        <button id="stopRec" disabled>Stop & Download</button>
+      </div>
+      <a id="downloadLink" hidden>Download generated clip</a>
+      <canvas id="studioCanvas" width="960" height="540"></canvas>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
