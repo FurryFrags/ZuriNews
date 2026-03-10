@@ -1,15 +1,14 @@
 # ZuriNews Live (Free AI News Channel)
 
-A CNN-style, real-time browser news channel featuring **Neko Airi**, a cute AI cat reporter persona.
+A fullscreen, live browser news feed with **Zuri** as an in-feed AI broadcaster.
 
 ## What it does
 
 - Pulls real-time headlines from online sources using keyless/free endpoints (RSS2JSON + Spaceflight News API).
-- Uses **Pollinations text API** (free, keyless) to generate a concise AI anchor line for each top story.
-- Continuously updates ticker + top story.
+- Uses the new **Pollinations service** at `https://enter.pollinations.ai` to generate concise AI broadcaster lines.
+- Presents the stream in a fullscreen feed layout with Zuri embedded directly in the hero story card.
 - Broadcast narration with a **female voice preference** using Web Speech API.
-- Includes a free in-browser "video generation" tool that records the live canvas broadcast to WebM.
-- Displays the provided `Zuri.png` in a CNN-style reporter frame/background.
+- Displays the provided `Zuri.png` as the live on-screen broadcaster.
 
 ## Run
 
@@ -19,4 +18,4 @@ python3 -m http.server 4173
 
 Open: `http://localhost:4173`
 
-> Note: Voice and recording require a modern browser (Chrome/Edge/Firefox). Some browsers/devices may offer different available voices.
+> Note: Voice requires a modern browser (Chrome/Edge/Firefox). Available voices vary by device/browser.
