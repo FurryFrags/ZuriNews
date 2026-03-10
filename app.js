@@ -2,15 +2,8 @@ const statusEl = document.getElementById("status");
 const currentStoryEl = document.getElementById("currentStory");
 const summaryEl = document.getElementById("summary");
 const feedListEl = document.getElementById("feedList");
-const tickerEl = document.getElementById("ticker");
 const reporterFrame = document.getElementById("reporterFrame");
 const toggleVoiceBtn = document.getElementById("toggleVoice");
-
-const startRecBtn = document.getElementById("startRec");
-const stopRecBtn = document.getElementById("stopRec");
-const downloadLink = document.getElementById("downloadLink");
-const canvas = document.getElementById("studioCanvas");
-const ctx = canvas.getContext("2d");
 
 const NEWS_SOURCES = [
   {
@@ -46,10 +39,7 @@ const NEWS_SOURCES = [
 ];
 
 let stories = [];
-let tickerIndex = 0;
 let voiceEnabled = true;
-let mediaRecorder;
-let recordedChunks = [];
 
 function summarize(text) {
   const cleaned = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
@@ -93,16 +83,40 @@ async function fetchSource(source) {
 async function generateAISummary(story) {
   const baseSummary = summarize(`${story.title}. ${story.description}`);
   const prompt = [
-    "You are a CNN-style TV producer.",
+    "You are Zuri, a polished live TV broadcaster.",
     "Return only one concise sentence under 35 words.",
     `Headline: ${story.title}`,
     `Context: ${story.description || baseSummary}`
   ].join("\n");
 
   try {
-    const aiUrl = `https://text.pollinations.ai/${encodeURIComponent(prompt)}`;
-    const response = await fetch(aiUrl);
+    const response = await fetch("https://enter.pollinations.ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: prompt }],
+        model: "openai"
+      })
+    });
+
     if (!response.ok) throw new Error("AI endpoint failed");
+
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const payload = await response.json();
+      const aiText = (
+        payload?.text ||
+        payload?.output ||
+        payload?.message ||
+        payload?.choices?.[0]?.message?.content ||
+        ""
+      )
+        .toString()
+        .replace(/\s+/g, " ")
+        .trim();
+      return aiText || baseSummary;
+    }
+
     const aiText = (await response.text()).replace(/\s+/g, " ").trim();
     return aiText || baseSummary;
   } catch (error) {
@@ -134,13 +148,13 @@ async function refreshNews() {
 
 async function updateTopStory(story) {
   currentStoryEl.textContent = story.title;
-  summaryEl.textContent = "Generating AI anchor line...";
+  summaryEl.textContent = "Generating Zuri's live line...";
   summaryEl.textContent = await generateAISummary(story);
 }
 
 function renderStories() {
   feedListEl.innerHTML = "";
-  stories.slice(0, 10).forEach((story) => {
+  stories.slice(0, 12).forEach((story) => {
     const li = document.createElement("li");
     const link = document.createElement("a");
     link.href = story.link;
@@ -163,8 +177,8 @@ function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
   const selectedVoice = pickFemaleVoice();
   if (selectedVoice) utterance.voice = selectedVoice;
-  utterance.pitch = 1.2;
-  utterance.rate = 1.02;
+  utterance.pitch = 1.12;
+  utterance.rate = 1;
 
   utterance.onstart = () => reporterFrame.classList.add("talking");
   utterance.onend = () => reporterFrame.classList.remove("talking");
@@ -172,94 +186,8 @@ function speak(text) {
 }
 
 function announceStory(story) {
-  const narration = `This is Neko Airi with a live update. ${story.title}. ${summaryEl.textContent}`;
+  const narration = `This is Zuri with a live update. ${story.title}. ${summaryEl.textContent}`;
   speak(narration);
-}
-
-function rotateTicker() {
-  if (!stories.length) return;
-  tickerEl.textContent = stories[tickerIndex % stories.length].title;
-  tickerIndex += 1;
-}
-
-function drawStudioFrame() {
-  const top = stories[0]?.title || "Waiting for top story...";
-  const sub = summaryEl.textContent || "Summarizing live input";
-  const now = new Date().toLocaleTimeString();
-
-  ctx.fillStyle = "#050a20";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "#cc0000";
-  ctx.fillRect(0, 0, canvas.width, 68);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 34px sans-serif";
-  ctx.fillText("ZuriNews LIVE", 28, 44);
-
-  ctx.fillStyle = "#f4f7ff";
-  ctx.font = "bold 29px sans-serif";
-  ctx.fillText("Neko Airi Reporting", 28, 118);
-
-  ctx.font = "bold 24px sans-serif";
-  wrapText(top, 28, 170, 900, 34);
-
-  ctx.fillStyle = "#cfe0ff";
-  ctx.font = "20px sans-serif";
-  wrapText(sub, 28, 280, 900, 30);
-
-  ctx.fillStyle = "#1e295f";
-  ctx.fillRect(0, 490, canvas.width, 50);
-  ctx.fillStyle = "#8bf0ce";
-  ctx.font = "bold 22px monospace";
-  ctx.fillText(`Broadcast Time: ${now}`, 28, 523);
-
-  requestAnimationFrame(drawStudioFrame);
-}
-
-function wrapText(text, x, y, maxWidth, lineHeight) {
-  const words = text.split(" ");
-  let line = "";
-  let yy = y;
-  for (const word of words) {
-    const test = line + word + " ";
-    if (ctx.measureText(test).width > maxWidth) {
-      ctx.fillText(line, x, yy);
-      line = word + " ";
-      yy += lineHeight;
-    } else {
-      line = test;
-    }
-  }
-  ctx.fillText(line, x, yy);
-}
-
-function startRecording() {
-  const stream = canvas.captureStream(30);
-  recordedChunks = [];
-  mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
-
-  mediaRecorder.ondataavailable = (event) => {
-    if (event.data.size > 0) recordedChunks.push(event.data);
-  };
-
-  mediaRecorder.onstop = () => {
-    const blob = new Blob(recordedChunks, { type: "video/webm" });
-    const url = URL.createObjectURL(blob);
-    downloadLink.href = url;
-    downloadLink.download = `zurinews-${Date.now()}.webm`;
-    downloadLink.hidden = false;
-    downloadLink.textContent = "Download generated news clip";
-  };
-
-  mediaRecorder.start();
-  startRecBtn.disabled = true;
-  stopRecBtn.disabled = false;
-}
-
-function stopRecording() {
-  mediaRecorder?.stop();
-  startRecBtn.disabled = false;
-  stopRecBtn.disabled = true;
 }
 
 toggleVoiceBtn.addEventListener("click", () => {
@@ -268,15 +196,9 @@ toggleVoiceBtn.addEventListener("click", () => {
   if (!voiceEnabled) speechSynthesis.cancel();
 });
 
-startRecBtn.addEventListener("click", startRecording);
-stopRecBtn.addEventListener("click", stopRecording);
-
 if ("speechSynthesis" in window) {
   speechSynthesis.onvoiceschanged = () => pickFemaleVoice();
 }
 
 refreshNews();
 setInterval(refreshNews, 120000);
-setInterval(rotateTicker, 8000);
-rotateTicker();
-drawStudioFrame();

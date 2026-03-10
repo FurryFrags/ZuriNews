@@ -7,51 +7,31 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="channel-shell">
-    <header class="top-bar">
-      <div class="logo">ZuriNews <span>LIVE</span></div>
-      <div class="status" id="status">Booting newsroom…</div>
-      <button id="toggleVoice" class="voice-btn">Voice: On</button>
-    </header>
+  <main class="news-feed" id="reporterFrame">
+    <div class="ambient-glow" aria-hidden="true"></div>
 
-    <main class="main-grid">
-      <section class="reporter-panel">
-        <div class="reporter-frame" id="reporterFrame">
-          <div class="cnn-backdrop" aria-hidden="true"></div>
-          <img src="Zuri.png" alt="Zuri AI anchor" class="zuri-avatar" />
-          <div class="mic"></div>
-          <div class="on-air-badge">ON AIR</div>
-        </div>
-        <div class="reporter-meta">
-          <h1>Neko Airi</h1>
-          <p>AI Feline Correspondent · Real-time global updates</p>
-        </div>
-      </section>
-
-      <section class="headlines-panel">
-        <h2>Breaking Feed</h2>
-        <article id="currentStory" class="current-story">Loading top story…</article>
-        <p id="summary" class="summary">Synthesizing summary…</p>
-        <ul id="feedList" class="feed-list"></ul>
-      </section>
-    </main>
-
-    <footer class="ticker-wrap">
-      <div class="ticker-label">LIVE TICKER</div>
-      <div id="ticker" class="ticker">Connecting to free global feeds…</div>
-    </footer>
-
-    <section class="studio-tools">
-      <h3>Free AI Studio Tools</h3>
-      <p>Generate a short channel clip (WebM) directly in your browser with no paid APIs.</p>
-      <div class="buttons">
-        <button id="startRec">Start Video Generation</button>
-        <button id="stopRec" disabled>Stop & Download</button>
+    <section class="hero-story">
+      <div class="reporter-overlay">
+        <img src="Zuri.png" alt="Zuri AI broadcaster" class="zuri-avatar" />
+        <div class="live-badge">LIVE · ZURI</div>
       </div>
-      <a id="downloadLink" hidden>Download generated clip</a>
-      <canvas id="studioCanvas" width="960" height="540"></canvas>
+
+      <div class="story-content">
+        <p class="kicker" id="status">Booting newsroom…</p>
+        <h1 id="currentStory">Loading top story…</h1>
+        <p id="summary" class="summary">Synthesizing summary…</p>
+      </div>
     </section>
-  </div>
+
+    <section class="feed-section">
+      <h2>Live Feed</h2>
+      <ul id="feedList" class="feed-list"></ul>
+    </section>
+
+    <section class="audio-controls">
+      <button id="toggleVoice" class="voice-btn">Voice: On</button>
+    </section>
+  </main>
 
   <script src="app.js"></script>
 </body>
